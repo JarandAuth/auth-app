@@ -26,10 +26,6 @@
                     <input id="inputPassword" class="form-control form-control-lg" type="password">
                 </div>
                 <input type="submit" value="Login" class="btn btn-primary btn-lg btn-block mb-2">
-                <div id="successAlert" class="alert alert-success d-none" role="alert">
-                    <h4 class="alert-heading">Success!</h4>
-                    You are now logged in.
-                </div>
                 <div id="errorAlert" class="alert alert-danger d-none" role="alert">
                     <h4 class="alert-heading">Error!</h4>
                     <span id="errorText"></span>
@@ -58,9 +54,9 @@
         const form = document.querySelector("#form");
         const inputEmail = document.querySelector("#inputEmail");
         const inputPassword = document.querySelector("#inputPassword");
-        const successAlert = document.querySelector("#successAlert");
         const errorAlert = document.querySelector("#errorAlert");
         const errorText = document.querySelector("#errorText");
+
 
         /*
             State
@@ -70,10 +66,6 @@
         /*
             State updates
         */
-        const resetInputEmail = () => inputEmail.value = "";
-
-        const resetInputPassword = () => inputPassword.value = "";
-
         const updateErrorText = updatedErrorText => errorText.innerText = updatedErrorText;
 
 
@@ -99,7 +91,7 @@
             const tokenData = await response.json();
             console.log(tokenData);
             if (tokenData.expiresIn > 10) {
-                console.log("Skipping token refresh - access token still valid")
+                window.location.replace("/?redirect-reason=access-token-still-valid");
                 return;
             }
             const signedRefreshToken = localStorage.getItem("refreshToken");
@@ -120,6 +112,7 @@
             const tokenJson = await refreshTokenResponse.json();
             localStorage.setItem("token", tokenJson.token);
             localStorage.setItem("refreshToken", tokenJson.refreshToken);
+            window.location.replace("/?redirect-reason=access-token-refreshed");
         }
 
 
@@ -129,7 +122,6 @@
         form.addEventListener("submit", async event => {
             event.preventDefault();
 
-            hide(successAlert);
             hide(errorAlert);
             updateErrorText("");
 
@@ -148,12 +140,12 @@
                 show(errorAlert);
                 return;
             }
-            resetInputEmail();
-            resetInputPassword();
-            show(successAlert);
+
             const tokenJson = await response.json();
             localStorage.setItem("token", tokenJson.token);
             localStorage.setItem("refreshToken", tokenJson.refreshToken);
+
+            window.location.replace("/?redirect-reason=login-successful");
         });
 
 
@@ -162,7 +154,7 @@
         */
         setInterval(() => {
             performTokenCheck();
-        }, 10000);
+        }, 5000);
     });
 </script>
 </body>
