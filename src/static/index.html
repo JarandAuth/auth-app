@@ -15,7 +15,14 @@
 
 <div class="container-sm">
     <div class="d-grid gap-2 mb-2">
-        <span id="subjectText" class="d-none"></span>
+        <div id="authenticationInfo" class="card d-none">
+            <div class="card-body">
+                <h5 class="card-title"><span id="subject">7d73bc64-66bf-4487-8322-04324618210d</span></h5>
+                <p class="card-text">Authenticated using <b><span id="authenticationMethod"></span></b> and identifier <b><span id="authenticationIdentifier"></span></b></p>
+                <p class="card-text">Current access token expires in <span id="expiresIn"></span> seconds</p>
+                <ul id="scope" class="list-group list-group-flush"></ul>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -31,11 +38,22 @@
         }
     }
 
+    const clearChildren = element => {
+        while (element.firstChild) {
+            element.removeChild(element.lastChild);
+        }
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
         /*
             DOM elements
         */
-        const subjectText = document.querySelector("#subjectText");
+        const authenticationInfo = document.querySelector("#authenticationInfo")
+        const subjectText = document.querySelector("#subject");
+        const authenticationMethodText = document.querySelector("#authenticationMethod");
+        const authenticationIdentifierText = document.querySelector("#authenticationIdentifier");
+        const expiresInText = document.querySelector("#expiresIn");
+        const scopeList = document.querySelector("#scope");
 
         /*
             State
@@ -46,6 +64,13 @@
             State updates
         */
         const updateSubjectText = updatedSubjectText => subjectText.innerText = updatedSubjectText;
+
+        const updateAuthenticationMethodText = updatedAuthenticationMethodText => authenticationMethodText.innerText = updatedAuthenticationMethodText;
+
+        const updateAuthenticationIdentifierText = updatedAuthenticationIdentifierText => authenticationIdentifierText.innerText = updatedAuthenticationIdentifierText;
+
+        const updateExpiresInText = updatedExpiresInText => expiresInText.innerText = updatedExpiresInText;
+
 
         /*
             Hooks
@@ -68,9 +93,19 @@
             }
             const tokenData = await response.json();
             console.log(tokenData);
-            updateSubjectText(`Logged in as: ${tokenData.subject}`);
-            show(subjectText);
-            if (tokenData.expiresIn > 10) {
+            updateSubjectText(tokenData.subject);
+            updateAuthenticationMethodText(tokenData.authenticationMethod);
+            updateAuthenticationIdentifierText(tokenData.authenticationIdentifier);
+            updateExpiresInText(tokenData.expiresIn);
+            clearChildren(scopeList);
+            tokenData.scope.forEach(scope => {
+                const scopeElement = document.createElement("li");
+                scopeElement.classList.add("list-group-item");
+                scopeElement.innerText = scope;
+                scopeList.appendChild(scopeElement);
+            });
+            show(authenticationInfo);
+            if (tokenData.expiresIn >= 20) {
                 console.log("Skipping token refresh - access token still valid")
                 return;
             }
