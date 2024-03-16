@@ -20,6 +20,7 @@
                 <h5 class="card-title"><span id="subject"></span></h5>
                 <p class="card-text">Authenticated using <b><span id="authenticationMethod"></span></b> and identifier <b><span id="authenticationIdentifier"></span></b></p>
                 <p class="card-text">Current access token expires in <span id="expiresIn"></span> seconds</p>
+                <h6 class="card-title">Access token scopes</h6>
                 <ul id="scope" class="list-group list-group-flush"></ul>
             </div>
         </div>
@@ -140,7 +141,7 @@
         */
         setInterval(() => {
             performTokenCheck();
-        }, 5000);
+        }, 1000);
     });
 </script>
 </body>
