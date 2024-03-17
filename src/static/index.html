@@ -14,7 +14,13 @@
 </div>
 
 <div class="container-sm">
+
     <div class="d-grid gap-2 mb-2">
+        <div id="redirectAlert" class="alert alert-info alert-dismissible fade show d-none" role="alert">
+            <b>Redirect: </b><span id="redirectText"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <div id="authenticationInfo" class="card d-none">
             <div class="card-body">
                 <h5 class="card-title"><span id="subject"></span></h5>
@@ -49,6 +55,8 @@
         /*
             DOM elements
         */
+        const redirectAlert = document.querySelector("#redirectAlert");
+        const redirectText = document.querySelector("#redirectText");
         const authenticationInfo = document.querySelector("#authenticationInfo")
         const subjectText = document.querySelector("#subject");
         const authenticationMethodText = document.querySelector("#authenticationMethod");
@@ -64,6 +72,8 @@
         /*
             State updates
         */
+        const updateRedirectText = updatedRedirectText => redirectText.innerText = updatedRedirectText;
+
         const updateSubjectText = updatedSubjectText => subjectText.innerText = updatedSubjectText;
 
         const updateAuthenticationMethodText = updatedAuthenticationMethodText => authenticationMethodText.innerText = updatedAuthenticationMethodText;
@@ -130,6 +140,29 @@
             localStorage.setItem("refreshToken", tokenJson.refreshToken);
         }
 
+        const handleUrlParameters = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectReason = urlParams.get("redirect-reason");
+            if (redirectReason) {
+                switch (redirectReason) {
+                    case "login-successful":
+                        updateRedirectText("You were redirected to this page because your login was successful.");
+                        break;
+                    case "access-token-still-valid":
+                        updateRedirectText("You were redirected to this page because you already have a valid access token.");
+                        break;
+                    case "access-token-refreshed":
+                        updateRedirectText("You were redirected to this page because you already have a valid refresh token which was used to refresh your access token.");
+                        break;
+                    default:
+                        updateRedirectText(`You were redirected to this page due to the following reason: ${redirectReason}.`);
+                        break;
+                }
+                urlParams.delete("redirect-reason");
+                show(redirectAlert);
+            }
+        }
+
 
         /*
             Listeners
@@ -142,6 +175,11 @@
         setInterval(() => {
             performTokenCheck();
         }, 1000);
+
+        /*
+            On load
+        */
+        handleUrlParameters();
     });
 </script>
 </body>
