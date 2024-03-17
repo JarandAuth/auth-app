@@ -14,7 +14,13 @@
 </div>
 
 <div class="container-sm">
+
     <div class="d-grid gap-2 mb-2">
+        <div id="redirectAlert" class="alert alert-info alert-dismissible fade show d-none" role="alert">
+            <b>Redirect: </b><span id="redirectText"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <form id="form">
             <div class="d-grid gap-2">
                 <div class="mb-2">
@@ -51,6 +57,8 @@
         /*
             DOM elements
         */
+        const redirectAlert = document.querySelector("#redirectAlert");
+        const redirectText = document.querySelector("#redirectText");
         const form = document.querySelector("#form");
         const inputEmail = document.querySelector("#inputEmail");
         const inputPassword = document.querySelector("#inputPassword");
@@ -66,6 +74,8 @@
         /*
             State updates
         */
+        const updateRedirectText = updatedRedirectText => redirectText.innerText = updatedRedirectText;
+
         const updateErrorText = updatedErrorText => errorText.innerText = updatedErrorText;
 
 
@@ -115,6 +125,32 @@
             window.location.replace("/?redirect-reason=access-token-refreshed");
         }
 
+        const handleUrlParameters = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectReason = urlParams.get("redirect-reason");
+            if (redirectReason) {
+                switch (redirectReason) {
+                    case "missing-access-token":
+                        updateRedirectText("You were redirected to this page because an access token is missing. Please log in to get new tokens.");
+                        break;
+                    case "invalid-access-token":
+                        updateRedirectText("You were redirected to this page because your access token is invalid. Please log in to get new tokens.");
+                        break;
+                    case "missing-refresh-token":
+                        updateRedirectText("You were redirected to this page because a refresh token is missing. Please log in to get new tokens.");
+                        break;
+                    case "invalid-refresh-token":
+                        updateRedirectText("You were redirected to this page because your refresh token is invalid. Please log in to get new tokens.");
+                        break;
+                    default:
+                        updateRedirectText(`You were redirected to this page due to the following reason: ${redirectReason}`);
+                        break;
+                }
+                urlParams.delete("redirect-reason");
+                show(redirectAlert);
+            }
+        }
+
 
         /*
             Listeners
@@ -155,6 +191,11 @@
         setInterval(() => {
             performTokenCheck();
         }, 5000);
+
+        /*
+            On load
+        */
+        handleUrlParameters();
     });
 </script>
 </body>
