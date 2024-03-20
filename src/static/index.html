@@ -30,7 +30,12 @@
                 <ul id="scope" class="list-group list-group-flush"></ul>
             </div>
         </div>
+
+        <div id="appInfo" class="row d-none">
+
+        </div>
     </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
@@ -63,6 +68,7 @@
         const authenticationIdentifierText = document.querySelector("#authenticationIdentifier");
         const expiresInText = document.querySelector("#expiresIn");
         const scopeList = document.querySelector("#scope");
+        const appInfo = document.querySelector("#appInfo");
 
         /*
             State
@@ -163,6 +169,104 @@
             }
         }
 
+        const loadApps = async () => {
+            hide(appInfo);
+            clearChildren(appInfo);
+
+            const signedToken = localStorage.getItem("token");
+            if (!signedToken) {
+                console.error("Skipping fetch of apps as there is no token")
+                return;
+            }
+            const response = await fetch("/api/app", {
+                method: "GET",
+                "headers": {
+                    "Authorization": `Bearer ${signedToken}`
+                }
+            });
+            if (!response.ok) {
+                console.error(`Fetching apps failed due to unexpected HTTP Response code: ${response.status}`);
+                return;
+            }
+
+            const apps = await response.json();
+
+            apps.forEach(app => {
+                const columnDiv = document.createElement("div");
+                columnDiv.classList.add("col-sm-6");
+
+                const card = document.createElement("div");
+                card.classList.add("card");
+
+                const nameBody = document.createElement("div");
+                nameBody.classList.add("card-body");
+
+                const nameTitle = document.createElement("h5");
+                nameTitle.classList.add("card-body");
+                nameTitle.innerText = app.name;
+
+                const clientIdHeader = document.createElement("div");
+                clientIdHeader.classList.add("card-header");
+                clientIdHeader.innerText = "Client ID";
+
+                const clientIdBody = document.createElement("div");
+                clientIdBody.classList.add("card-body");
+
+                const clientIdText = document.createElement("p");
+                clientIdText.classList.add("card-text");
+                clientIdText.innerText = app.clientId;
+
+                const redirectURIsHeader = document.createElement("div");
+                redirectURIsHeader.classList.add("card-header");
+                redirectURIsHeader.innerText = "Redirect URIs";
+
+                const redirectURIsBody = document.createElement("div");
+                redirectURIsBody.classList.add("card-body");
+
+                const redirectURIsList = document.createElement("ul");
+                redirectURIsList.classList.add("list-group", "list-group-flush");
+
+                app.redirectURI.forEach(redirectURI => {
+                    const redirectUriItem = document.createElement("li");
+                    redirectUriItem.classList.add("list-group-item");
+                    redirectUriItem.innerText = redirectURI;
+                    redirectURIsList.appendChild(redirectUriItem);
+                });
+
+                const createdBody = document.createElement("div");
+                createdBody.classList.add("card-body");
+
+                const createdTextWrapper = document.createElement("p");
+                createdTextWrapper.classList.add("card-text");
+
+                const createdText = document.createElement("small");
+                createdText.classList.add("text-body-secondary");
+                createdText.innerText = `Created ${app.created} Owned by: ${app.owner}`;
+
+                appInfo.appendChild(columnDiv);
+
+                columnDiv.appendChild(card);
+
+                card.appendChild(nameBody);
+                card.appendChild(clientIdHeader);
+                card.appendChild(clientIdBody);
+                card.appendChild(redirectURIsHeader);
+                card.appendChild(redirectURIsBody);
+                card.appendChild(createdBody);
+
+                nameBody.appendChild(nameTitle);
+
+                clientIdBody.appendChild(clientIdText);
+
+                redirectURIsBody.appendChild(redirectURIsList);
+
+                createdBody.appendChild(createdTextWrapper);
+                createdTextWrapper.appendChild(createdText);
+            });
+
+            show(appInfo);
+        }
+
 
         /*
             Listeners
@@ -172,9 +276,10 @@
         /*
             Schedulers
         */
-        setInterval(() => {
-            performTokenCheck();
-        }, 1000);
+        setInterval(async () => {
+            await performTokenCheck();
+            await loadApps();
+        }, 10000);
 
         /*
             On load
